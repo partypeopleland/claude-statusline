@@ -15,11 +15,11 @@ def get(d, *keys):
     return d if d != {} else ''
 
 def fmt_pct(val):
-    """Ceiling to 1 decimal place (無條件進位)."""
+    """Ceiling to 1 decimal place; drop decimal if zero."""
     try:
         v = float(val)
         ceiled = math.ceil(v * 10) / 10
-        return f'{ceiled:.1f}'
+        return str(int(ceiled)) if ceiled % 1 == 0 else f'{ceiled:.1f}'
     except:
         return ''
 
