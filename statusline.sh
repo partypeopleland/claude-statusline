@@ -15,7 +15,7 @@ week_pct=$(echo "$parsed"    | sed -n '5p')
 week_reset=$(echo "$parsed"  | sed -n '6p')
 
 # Convert Windows backslash path to forward slash for git
-git_dir=$(echo "$project_dir" | sed 's|\\|/|g' | sed 's|^\([A-Za-z]\):|/\L\1|')
+git_dir=$(printf '%s' "$project_dir" | sed 's/[\\]/\//g' | sed 's/^\([A-Za-z]\):\//\/\l\1\//')
 
 # --- Colors (256-color ANSI — soft, non-glaring palette) ---
 RESET="\033[0m"
@@ -43,7 +43,7 @@ fi
 
 # --- 2. Git status ---
 git_part=""
-if [ -n "$git_dir" ] && [ -d "$git_dir/.git" ]; then
+if [ -n "$git_dir" ] && git -C "$git_dir" rev-parse --git-dir >/dev/null 2>&1; then
     branch=$(git -C "$git_dir" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null)
     if [ -n "$branch" ]; then
         dirty=$(git -C "$git_dir" --no-optional-locks status --porcelain 2>/dev/null)
@@ -96,4 +96,4 @@ for i in "${!parts[@]}"; do
     [ "$i" -eq 0 ] && output="${parts[$i]}" || output="${output}${sep}${parts[$i]}"
 done
 
-printf "%b\n" "$output"
+printf "%s\n" "$output"
