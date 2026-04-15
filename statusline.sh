@@ -13,6 +13,10 @@ five_pct=$(echo "$parsed"    | sed -n '3p')
 five_reset=$(echo "$parsed"  | sed -n '4p')
 week_pct=$(echo "$parsed"    | sed -n '5p')
 week_reset=$(echo "$parsed"  | sed -n '6p')
+total_in=$(echo "$parsed"    | sed -n '7p')
+total_out=$(echo "$parsed"   | sed -n '8p')
+last_in=$(echo "$parsed"     | sed -n '9p')
+last_out=$(echo "$parsed"    | sed -n '10p')
 
 # Convert Windows backslash path to forward slash for git
 git_dir=$(printf '%s' "$project_dir" | sed 's/[\\]/\//g' | sed 's/^\([A-Za-z]\):\//\/\l\1\//')
@@ -25,6 +29,9 @@ COLOR_PATH="\033[38;5;117m"        # soft sky blue
 COLOR_GIT="\033[38;5;153m"         # bright sky blue
 COLOR_GIT_DIRTY="\033[38;5;215m"   # soft orange (replaces harsh red)
 COLOR_RESET_TIME="\033[38;5;152m"  # soft cyan for reset times
+COLOR_TOKEN_IN="\033[38;5;110m"   # muted blue for input tokens
+COLOR_TOKEN_OUT="\033[38;5;144m"  # muted gold for output tokens
+COLOR_TOKEN_DIM="\033[38;5;242m"  # dim gray for labels
 
 # Usage color: soft green / amber / muted coral based on integer part
 usage_color() {
@@ -82,13 +89,28 @@ if [ -n "$week_pct" ]; then
     fi
 fi
 
+# --- 6. Token counts ---
+# Session total: ↑in ↓out  |  Last call: ↑in ↓out
+token_part=""
+if [ -n "$total_in" ] || [ -n "$total_out" ]; then
+    ti="${total_in:-0}"
+    to="${total_out:-0}"
+    token_part=$(printf "${COLOR_TOKEN_DIM}session${RESET} ${COLOR_TOKEN_IN}↑%s${RESET} ${COLOR_TOKEN_OUT}↓%s${RESET}" "$ti" "$to")
+    if [ -n "$last_in" ] || [ -n "$last_out" ]; then
+        li="${last_in:-0}"
+        lo="${last_out:-0}"
+        token_part=$(printf "%s ${COLOR_TOKEN_DIM}last${RESET} ${COLOR_TOKEN_IN}↑%s${RESET} ${COLOR_TOKEN_OUT}↓%s${RESET}" "$token_part" "$li" "$lo")
+    fi
+fi
+
 # --- Assemble with soft separator ---
 parts=()
 [ -n "$path_part" ] && parts+=("$path_part")
 [ -n "$git_part"  ] && parts+=("$git_part")
 [ -n "$ctx_part"  ] && parts+=("$ctx_part")
 [ -n "$five_part" ] && parts+=("$five_part")
-[ -n "$week_part" ] && parts+=("$week_part")
+[ -n "$week_part"  ] && parts+=("$week_part")
+[ -n "$token_part" ] && parts+=("$token_part")
 
 sep=$(printf "${DIM} · ${RESET}")
 output=""
